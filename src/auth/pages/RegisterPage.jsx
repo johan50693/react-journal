@@ -1,10 +1,12 @@
 
 import { Google } from '@mui/icons-material'
-import { Button, Grid, Link, TextField, Typography } from '@mui/material'
-import React from 'react'
+import { Alert, Button, Grid, Link, TextField, Typography } from '@mui/material'
+import React, { useMemo } from 'react'
 import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import {Link as RouterLink} from 'react-router-dom'
 import { useForm } from '../../hooks/useForm'
+import { startCreatingUserWithEmailPassword } from '../../store/auth'
 import { AuthLayout } from '../layout/AuthLayout'
 
 const formData= {
@@ -20,7 +22,12 @@ const formValidations = {
 }
 
 export const RegisterPage = () => {
+  
+  const dispatch = useDispatch();
   const [formSubmited, setformSubmited] = useState(false);
+  
+  const { status, errorMessage } = useSelector( state => state.auth);
+  const isAuthenticating = useMemo( () => status === 'checking', [status]);
 
   const { 
     formState, displayName, email, password, onInputChange, 
@@ -30,7 +37,10 @@ export const RegisterPage = () => {
   const onSubmit = (event) => {
     event.preventDefault();
     setformSubmited(true);
-    console.log(formState);
+    if(!isFormValid) return;
+
+    dispatch(startCreatingUserWithEmailPassword(formState));
+    // console.log(formState);
   }
 
   return (
@@ -81,12 +91,19 @@ export const RegisterPage = () => {
               />
             </Grid>
 
-            <Grid container spacing={2} sx={{mb:2, mt:1}}>
+            <Grid container spacing={2} sx={{ mb: 2, mt: 1 }}>
+              <Grid 
+                    display={!!errorMessage ? '' : 'none'}
+                    item 
+                    xs={12}>
+                <Alert severity='error' >{errorMessage}</Alert>
+              </Grid>
               <Grid item xs={12}>
-                <Button 
-                        type="submit"
-                        variant='contained' 
-                        fullWidth>
+                <Button
+                  disabled={!isFormValid || isAuthenticating}
+                  type="submit"
+                  variant='contained'
+                  fullWidth>
                   Crear Cuenta
                 </Button>
               </Grid>
